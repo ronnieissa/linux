@@ -1,0 +1,63 @@
+#cloud-config
+hostname: ubuntubionic
+fqdn: ubuntubionic.local.lab
+write_files:
+- path: /etc/netplan/50-cloud-init.yaml
+content: |
+network:
+version: 2
+ethernets:
+ens192:
+addresses: [192.168.10.79/24]
+gateway4: 192.168.10.1
+dhcp6: false
+nameservers:
+addresses:
+- 192.168.10.2
+- 192.168.10.3
+search:
+- local.lab
+dhcp4: false
+optional: true
+- path: /etc/sysctl.d/60-disable-ipv6.conf
+owner: root
+content: |
+net.ipv6.conf.all.disable_ipv6=1
+net.ipv6.conf.default.disable_ipv6=1
+runcmd:
+- netplan --debug apply
+- sysctl -w net.ipv6.conf.all.disable_ipv6=1
+- sysctl -w net.ipv6.conf.default.disable_ipv6=1
+- apt-get -y update
+- add-apt-repository universe
+- apt-get -y clean
+- apt-get -y autoremove --purge
+timezone: Europe/Brussels
+system_info:
+default_user:
+name: default-user
+lock_passwd: false
+sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+disable_root: false
+ssh_pwauth: yes
+users:
+- default
+- name: luc
+gecos: LucD
+lock_passwd: false
+groups: sudo, users, admin
+shell: /bin/bash
+sudo: ['ALL=(ALL) NOPASSWD:ALL']
+chpasswd:
+list: |
+default-user:$6$aPp//e2ueP$ETEXcAhAyQuJ4qNCbqxmmSYGZbg2wFwpP/YITvoXdgxwZBnf32drePKi2OIn5fLqtH5pHO03yRdPXK3ToLG6b0
+luc:$6$kW1WwJ2K$M6415du1BZd.qt92SvR6X.RuyDhEZmgR4hz4NcKH9XHn2850Vc6zHpubXM6uUeqMUaJQ740ogROB74gfBEhn9.
+root:$6$Js9CVr06$br9qf0VxuBsdY7Vtg/0pk9jLlycYBDLVsvbKwLDleCK7dSDheOxWaFOWdjkiqSPRrWG./N8V5RgCVwugZGnTc1
+expire: false
+package_upgrade: true
+package_reboot_if_required: true
+power_state:
+delay: now
+mode: reboot
+message: Rebooting the OS
+condition: if [ -e /var/run/reboot-required ]; then exit 0; else exit 1; fi
