@@ -1,0 +1,1 @@
+killallcontainers() { containers=$(docker container ls --all | awk '{print $1}' | tr -s "\n" " "| awk '{first=$1;$1="";print $0}'); docker container stop $containers && docker container rm $containers; }
